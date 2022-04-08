@@ -12,7 +12,9 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -140,9 +142,23 @@ public class PersistenceService {
                 .getResultList();
     }
 
-    public User search(String query){
+    public List<User> search(String query){
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("myEntityManager");
+        List<User> list = new ArrayList<>();
         //todo search for it with username, email and tel
-        return null;
+        list.add(getUser(query));
+        EntityManager em = emf.createEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<User>  cr = criteriaBuilder.createQuery(User.class);
+        Root<User> root = cr.from(User.class);
+        Predicate p0 = criteriaBuilder.like(root.get("email"), query);
+        Predicate p1 = criteriaBuilder.like(root.get("tel"), query);
+        Predicate p01 = criteriaBuilder.or(p0,p1);
+        cr.select(root).where(p01);
+        Session session = (Session) em.getDelegate();
+        Query<User> query1 = session.createQuery(cr);
+        list.addAll(query1.getResultList());
+        return list;
     }
 
 }
