@@ -4,10 +4,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Ignore;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,11 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.Repeat;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,8 +41,6 @@ public class ChatApplicationTests {
     private int port;
     @Autowired
     private TestRestTemplate restTemplate;
-    private static final long startdate = TimeUnit.DAYS.toMillis(1);
-    static String strAllowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -60,34 +61,26 @@ public class ChatApplicationTests {
         return implementations;
     }
 
-    static User getRandUser() {
-        return new User(getRandString(), getRandString(), getRandString() + "@" + getRandString(), "" + new Random().nextInt(100), new Locale("en"), getRandDate(), getRandString(), new Random().nextInt());
-    }
 
-    static String getRandString() {
-        Random random = new Random(20);
-        StringBuilder builder = new StringBuilder(20);
-        for (int i = 0; i < 20; i++) {
-            builder.append(strAllowedCharacters.charAt(random.nextInt(strAllowedCharacters.length())));
-        }
-        return builder.toString();
-    }
-
-    static Date getRandDate() {
-        return new Date(ThreadLocalRandom
-                .current()
-                .nextLong(startdate, new Date().getTime()));
-
-    }
 
     static List<User> getRandTestUser() {
         List<User> list = new ArrayList<>();
         for (int i = 0; i < new Random().nextInt(10); i++) {
-            list.add(getRandUser());
+            list.add(TestUtils.getRandUser());
         }
-        list.add(getRandUser());
+        list.add(TestUtils.getRandUser());
         return list;
     }
+
+    /**@BeforeAll
+    static void cleanUp(){
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("myEntityManager");
+        EntityManager em = emf.createEntityManager();
+        em.getTransaction().begin();
+        em.createQuery("delete from chat.user");
+        em.getTransaction().commit();
+        em.close();
+    }*/
 
     @Test
     @Order(1)
@@ -136,7 +129,7 @@ public class ChatApplicationTests {
 
     @ParameterizedTest
     @Order(5)
-    @MethodSource("getTestUser")
+    @MethodSource("getRandTestUser")
     void testMultiDeRegister(User user) throws Exception {
         System.out.println("testMultiDeRegister");
         String uriD = "http://localhost:" + port + "/deregister";
@@ -154,6 +147,7 @@ public class ChatApplicationTests {
         assertNotNull(result2);
     }
 
+    @Disabled
     @ParameterizedTest
     @Order(6)
     @MethodSource("getRandTestUser")
@@ -170,6 +164,7 @@ public class ChatApplicationTests {
         assertTrue(result);
     }
 
+    @Disabled
     @ParameterizedTest
     @Order(7)
     @MethodSource("getRandTestUser")
@@ -186,6 +181,7 @@ public class ChatApplicationTests {
         assertTrue(result);
     }
 
+    @Disabled
     @ParameterizedTest
     @Order(8)
     @MethodSource("getRandTestUser")
