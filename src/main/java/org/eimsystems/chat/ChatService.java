@@ -4,9 +4,14 @@ package org.eimsystems.chat;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -14,6 +19,7 @@ import java.util.logging.Logger;
 
 @RestController
 public class ChatService {
+	Logger logger;
 	/*
 	 * central class for handling methods
 	 */
@@ -33,13 +39,22 @@ public class ChatService {
 		binder.registerCustomEditor(User.class, new UserEditor());
 	}
 
-	//todo probably it does not consumes any
-	@PostMapping(value ="/login",  consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public User login(){
+
+	@RequestMapping(value = "/user", method = RequestMethod.GET)
+	@ResponseBody
+	public User currentUser() {
+		logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+		logger.setLevel(Level.ALL);
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String name = authentication.getName();
-		return persistenceService.getUser(name);
+		if(authentication.getPrincipal() instanceof UserDetails userDetails) {
+			logger.info("authorities: " + userDetails.getAuthorities());
+			logger.info("userdetails username: " + userDetails.getUsername());
+			return persistenceService.getUser(userDetails.getUsername());
+		}
+		logger.severe("fatal problem in /user");
+		return null;
 	}
+
 
 	@GetMapping("/sendMessage")
 	public void sendMessage(@RequestParam(value="message", defaultValue = "null") Message message) {
@@ -82,7 +97,7 @@ public class ChatService {
 			QueueService.store(message, message.getIdReceive());
 		}
 	}
-	@GetMapping(value = "/getMessage", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping( value = "/getMessage", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public Message[] getMessages(long id){
 		return (Message[])QueueService.get(id).toArray();
 	}
@@ -101,5 +116,33 @@ public class ChatService {
 	@GetMapping(value = "/getKeys", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<KeyExchange> getKeys(long id){
 		return persistenceService.getKeyExchange(id);
+	}
+
+	@GetMapping(value ="/test", produces = MediaType.APPLICATION_JSON_VALUE)
+	public int test(){
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+		logger.info("authentication: " + authentication.toString());
+		String currentUser = authentication.getName();
+		logger.info("currentUser: " + currentUser);
+
+		if(authentication.getPrincipal() instanceof UserDetails userDetails){
+			logger.info("authorities: " + userDetails.getAuthorities());
+			logger.info("userdetails username: " + userDetails.getUsername());
+			logger.info("userdetails password: " + userDetails.getPassword());
+		}else if(authentication.getPrincipal() instanceof String s){
+			logger.info("principal is instanceof String, principal : " + s);
+		}
+
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.
+				currentRequestAttributes()).
+				getRequest();
+		logger.info("AuthType: " + request.getAuthType());
+		logger.info("remoteUser: " + request.getRemoteUser());
+		logger.info(("username header: " + request.getHeader("username")));
+		logger.info("password header: " + request.getHeader("password"));
+
+		logger.info(authentication.getPrincipal().getClass().getName());
+		return 0;
 	}
 }

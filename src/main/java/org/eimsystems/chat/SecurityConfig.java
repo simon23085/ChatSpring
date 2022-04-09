@@ -14,7 +14,10 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+import javax.sql.DataSource;
 import java.security.*;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -39,8 +42,33 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
-                .authorizeRequests().antMatchers("/ping").permitAll();
+                .authorizeRequests()
+                .antMatchers("/", "/login/**" , "/login", "/login/" , "/register", "/register/", "/register/**", "/ping")
+                .permitAll()
+                .anyRequest()
+                .authenticated()
+                .and()
+                .httpBasic();
+        http
+                .formLogin()
+                .failureForwardUrl("/test")
+                .defaultSuccessUrl("/ping");
     }
+
+   /* @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth)throws Exception{
+        auth.jdbcAuthentication()
+                .dataSource(dataSource)
+                .withDefaultSchema()
+                .withUser(User.withUsername("username")
+                        .password(passwordEncoder().encode("password"))
+                        .roles("USER"));
+    }
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        //todo change
+        return NoOpPasswordEncoder.getInstance();
+    }*/
 
     @Bean
     public AuthenticationProvider authProvider() {

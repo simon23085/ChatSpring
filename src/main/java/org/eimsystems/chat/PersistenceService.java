@@ -101,7 +101,7 @@ public class PersistenceService {
         Query<User> query = session.createQuery(cr);
         List<User> results = query.getResultList();
         if(results.size()==0){
-            logger.warning("could not find user with his username");
+            logger.warning("could not find user with the username: " + username);
             em.close();
             return null;
         }else if (results.size()>1){
