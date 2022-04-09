@@ -48,22 +48,10 @@ public class ChatService {
 
 	@PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public boolean register(@RequestBody User user) {
-		Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-		logger.setLevel(Level.ALL);
-		logger.info("###ChatService.register()");
-		logger.info(user.toString());
-		logger.info("###");
-		logger.info("");
 		return persistenceService.register(user);
 	}
 	@PostMapping(value ="/deregister",  consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public boolean deregister(@RequestBody User user){
-		Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-		logger.setLevel(Level.ALL);
-		logger.info("###ChatService.deregister()");
-		logger.info(user.toString());
-		logger.info("###");
-		logger.info("");
 		return persistenceService.deregister(user);
 	}
 	@PostMapping(value ="/updateuser",  consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

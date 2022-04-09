@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.Locale;
 @Entity
 @Table(name="user", schema = "chat")
-@NamedQuery(name="same", query ="SELECT u FROM User u WHERE u.email LIKE :custmail  or u.tel LIKE :custtel or u.username LIKE :custname")
+@NamedQuery(name="same", query ="SELECT u FROM User u WHERE u.email = :custmail  or u.tel = :custtel or u.username = :custname")
 public class User implements Serializable,Comparable< User >{
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -189,6 +189,16 @@ public class User implements Serializable,Comparable< User >{
 
     @Override
     public int compareTo(User o) {
-        return ((Long)this.getId()).compareTo(o.getId());
+        return Long.compare(this.getId(), o.getId());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof User other){
+            return other.getId()==getId()&&other.getUsername().equals(getUsername())&&other.email.equals(getEmail())
+                    && other.getTel().equals(getTel())&&other.birthday.equals(getBirthday())&&other.firstName.equals(getFirstName())
+                    &&other.getLocal().equals(getLocal())&&other.getName().equals(getName())&& Arrays.equals(other.getProfilePicture(), getProfilePicture())
+            &&other.getPw()==getPw();
+        }else return false;
     }
 }

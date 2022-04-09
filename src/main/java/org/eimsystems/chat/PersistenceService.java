@@ -40,15 +40,18 @@ public class PersistenceService {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
         if (!em.contains(user)) {
+            logger.info("user is not contained by EntityManager");
             List l = em.createNamedQuery("same")
                     .setParameter("custmail", user.getEmail())
                     .setParameter("custtel", user.getTel())
                     .setParameter("custname", user.getUsername())
                     .getResultList();
             if(l.size()>0){
+                logger.info("found " + l.size() + " users with identically email, tel or username");
                 em.close();
                 return false;
             }else {
+                logger.info("no user found with identically email, tel or username, persist user now");
                 em.persist(user);
                 em.getTransaction().commit();
                 em.close();
@@ -62,6 +65,7 @@ public class PersistenceService {
     }
     //todo check that user details can be changed(unique etc.)
     public User updateUser(User user){
+        logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
         logger.info("updateUser()");
         logger.info(user.toString());
 
@@ -86,6 +90,7 @@ public class PersistenceService {
         return user;
     }
     public User getUser(String username){
+        logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("myEntityManager");
         EntityManager em = emf.createEntityManager();
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
@@ -110,6 +115,7 @@ public class PersistenceService {
     }
 
     public boolean deregister(User user) {
+        logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
         logger.info("deregister()");
         logger.info(user.toString());
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("myEntityManager");
@@ -120,10 +126,24 @@ public class PersistenceService {
             em.getTransaction().commit();
             em.close();
             return true;
-        } else {
-            em.close();
-            return false;
         }
+        User user1 = em.find(User.class, user.getId());
+        if(user1!=null){
+            em.remove(user1);
+            em.getTransaction().commit();
+            em.close();
+            return true;
+        }
+        User user2 = getUser(user.getUsername());
+        if(user2!=null){
+            User user3 = em.find(User.class, user2.getId());
+            if(!user2.equals(user3))throw new RuntimeException("user2 and user3 should be equal");
+            em.remove(user3);
+            em.getTransaction().commit();
+            em.close();
+            return true;
+        }
+        return false;
     }
     public void persistKey(KeyExchange keyExchange){
         logger.info("keyExchange");

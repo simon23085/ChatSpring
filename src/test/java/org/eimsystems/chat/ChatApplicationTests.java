@@ -1,12 +1,12 @@
 package org.eimsystems.chat;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Ignore;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,19 +17,13 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.Repeat;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(OrderAnnotation.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -62,7 +56,6 @@ public class ChatApplicationTests {
     }
 
 
-
     static List<User> getRandTestUser() {
         List<User> list = new ArrayList<>();
         for (int i = 0; i < new Random().nextInt(10); i++) {
@@ -71,16 +64,6 @@ public class ChatApplicationTests {
         list.add(TestUtils.getRandUser());
         return list;
     }
-
-    /**@BeforeAll
-    static void cleanUp(){
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("myEntityManager");
-        EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
-        em.createQuery("delete from chat.user");
-        em.getTransaction().commit();
-        em.close();
-    }*/
 
     @Test
     @Order(1)
@@ -94,41 +77,32 @@ public class ChatApplicationTests {
     void pingTest() throws Exception {
         long result = this.restTemplate.getForObject("http://localhost:" + port + "/ping", Long.class);
         assertThat(result).isLessThanOrEqualTo(System.currentTimeMillis());
-        System.out.println(result);
+        System.out.println("ping: " + (System.currentTimeMillis() - result) + " ms");
     }
 
     @ParameterizedTest
     @Order(3)
     @MethodSource("getTestUser")
+    @DisplayName(" register and unregister TestUser")
     void testRegister(User user) throws Exception {
-        System.out.println("testRegister");
-        String uri = "http://localhost:" + port + "/register";
+        String uriR = "http://localhost:" + port + "/register";
+        String uriD = "http://localhost:" + port + "/deregister";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         //restTemplate.withBasicAuth("admin", "-52617293");
-        System.out.println(user.toString());
         HttpEntity<String> request = new HttpEntity<String>(mapToJson(user), headers);
-        Boolean result = restTemplate.postForObject(uri, request, Boolean.class);
+        Boolean result = restTemplate.postForObject(uriR, request, Boolean.class);
         assertNotNull(result);
+        assertTrue(result);
+
+        HttpEntity<String> request1 = new HttpEntity<String>(mapToJson(user), headers);
+        Boolean result1 = restTemplate.postForObject(uriD, request1, Boolean.class);
+        assertNotNull(result1);
+        assertTrue(result1);
     }
 
     @ParameterizedTest
     @Order(4)
-    @MethodSource("getTestUser")
-    void testDeregister(User user) throws Exception {
-        System.out.println("testDeregister ");
-        String uri = "http://localhost:" + port + "/deregister";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        //restTemplate.withBasicAuth("admin", "-52617293");
-        System.out.println(user.toString());
-        HttpEntity<String> request = new HttpEntity<String>(mapToJson(user), headers);
-        Boolean result = restTemplate.postForObject(uri, request, Boolean.class);
-        assertNotNull(result);
-    }
-
-    @ParameterizedTest
-    @Order(5)
     @MethodSource("getRandTestUser")
     void testMultiDeRegister(User user) throws Exception {
         System.out.println("testMultiDeRegister");
@@ -147,43 +121,9 @@ public class ChatApplicationTests {
         assertNotNull(result2);
     }
 
-    @Disabled
+    //@Disabled
     @ParameterizedTest
-    @Order(6)
-    @MethodSource("getRandTestUser")
-    void randTestRegister(User user) throws Exception {
-        System.out.println("randTestRegister");
-        String uri = "http://localhost:" + port + "/register";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        //restTemplate.withBasicAuth("admin", "-52617293");
-        System.out.println(user.toString());
-        HttpEntity<String> request = new HttpEntity<String>(mapToJson(user), headers);
-        Boolean result = restTemplate.postForObject(uri, request, Boolean.class);
-        assertNotNull(result);
-        assertTrue(result);
-    }
-
-    @Disabled
-    @ParameterizedTest
-    @Order(7)
-    @MethodSource("getRandTestUser")
-    void randTestDeregister(User user) throws Exception {
-        System.out.println("randTestDeregister");
-        String uri = "http://localhost:" + port + "/deregister";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        //restTemplate.withBasicAuth("admin", "-52617293");
-        System.out.println(user.toString());
-        HttpEntity<String> request = new HttpEntity<String>(mapToJson(user), headers);
-        Boolean result = restTemplate.postForObject(uri, request, Boolean.class);
-        assertNotNull(result);
-        assertTrue(result);
-    }
-
-    @Disabled
-    @ParameterizedTest
-    @Order(8)
+    @Order(5)
     @MethodSource("getRandTestUser")
     void testRandMultiDeRegister(User user) throws Exception {
         System.out.println("testRandMultiDeRegister");
