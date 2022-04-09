@@ -1,6 +1,8 @@
 package org.eimsystems.chat;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,6 +13,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,15 +28,16 @@ public class ChatService {
 	 */
 	private final PersistenceService persistenceService =  new PersistenceService();
 
-
-	public List<Message> getMessage(){
-		
-		
-		/* 
-		 * do the stuff
-		 */
-		return null;
+	protected String mapToJson(Object obj) throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		return objectMapper.writeValueAsString(obj);
 	}
+
+	protected <T> T mapFromJson(String json, Class<T> clazz) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		return objectMapper.readValue(json, clazz);
+	}
+
 	@InitBinder
 	public void initBinder(WebDataBinder binder) {
 		binder.registerCustomEditor(User.class, new UserEditor());
@@ -56,8 +60,10 @@ public class ChatService {
 	}
 
 
-	@GetMapping("/sendMessage")
-	public void sendMessage(@RequestParam(value="message", defaultValue = "null") Message message) {
+	@PostMapping(value = "/sendmessage", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public void sendMessage(Message message) throws JsonProcessingException {
+		//ObjectMapper objectMapper = new ObjectMapper();
+		//Message message = objectMapper.readValue(strMessage, Message.class);
 		QueueService.store(message, message.getIdReceive());
 	}
 
