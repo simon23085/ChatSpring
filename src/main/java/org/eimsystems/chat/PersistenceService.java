@@ -165,7 +165,6 @@ public class PersistenceService {
     public List<User> search(String query){
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("myEntityManager");
         List<User> list = new ArrayList<>();
-        //todo search for it with username, email and tel
         list.add(getUser(query));
         EntityManager em = emf.createEntityManager();
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();

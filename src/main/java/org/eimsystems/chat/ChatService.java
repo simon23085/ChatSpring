@@ -83,8 +83,15 @@ public class ChatService {
 
 	@GetMapping("/search")
 	public User search(@RequestParam(value="search", defaultValue = "") String s) {
-		//todo use username, mail or tel to find user and return
-		return null;
+		List<User> users = persistenceService.search(s);
+		if(users.size()>1){
+			logger.info("got " + users.size() + " users but expected 0 or 1 results");
+			return null;
+		}else if (users.size()==0){
+			return null;
+		}else {
+			return users.get(0);
+		}
 	}
 	
 
